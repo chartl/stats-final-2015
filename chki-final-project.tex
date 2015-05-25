@@ -1,0 +1,107 @@
+\documentclass[9pt,twocolumn]{article}
+\usepackage{tikz}
+\usepackage[utf8]{inputenc}
+\usepackage{setspace}
+\usepackage{geometry} % to change the page dimensions
+\geometry{a4paper}
+\usepackage{graphicx}
+\usepackage{ulem}
+%\usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+
+%%% PACKAGES
+\usepackage{booktabs} % for much better looking tables
+\usepackage{array} % for better arrays (eg matrices) in maths
+\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+\usepackage{amssymb}
+\usepackage{amsfonts}
+% These packages are all incorporated in the memoir class to one degree or another...
+
+%%% HEADERS & FOOTERS
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customise the layout...
+\lhead{}\chead{}\rhead{}
+\lfoot{}\cfoot{\thepage}\rfoot{}
+
+%%% SECTION TITLE APPEARANCE
+\usepackage{sectsty}
+\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
+% (This matches ConTeXt defaults)
+
+%%% ToC (table of contents) APPEARANCE
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+\newcommand{\nan}{\mathtt{nan}}
+\newcommand{\bxi}{\mathbf{\Xi}}
+\title{Gene Clustering by Chromatin State}
+\author{Kimberly Insigne \& Chris Hartl}
+
+\begin{document}
+\maketitle
+
+\section*{Introduction}
+A major determinant of cellular behavior is the establishment and maintenance of patterns of gene expression. Cellular identity is maintained in part by the stereotyped coexpression of gene modules \cite{mason09}, and cellular response to extracellular signals can take the form of patterned expression of multiple genes, such as in macrophage activation \cite{xue2014}. Indeed, gene regulatory network dynamics have been theorized to be the substrate for the evolution of higher-level phenotypes \cite{davidson11}, and gene network disruptions have been implicated in the biology of behavioral and psychiatric disorders such as Autism \cite{parikshak13}\cite{willsey13} and schizophrenia \cite{gulsner13}.
+
+RNA coexpression networks \cite{rnacn-review} provide gene sets whose expression is correlated under natural perturbation (i.e. correlated across individuals within treatment groups), suggesting the presence of regulatory controls designed to maintain this corrlative structure \cite{rnacn-regulation}. This canalization (reduction of variance/covariance) of gene expression is hypothesized to be mediated in part by DNA structure \cite{gene-structure-expression-reg}, and therefore should be related to local chromatin state.
+
+This presents the challenge of identifying the role of chromatin organization in shaping coexpression networks. One potential approach is to ``force'' histone mark information into the coexpression network by representing peak intensities as potential factors in a factor graph. A second approach (see \cite{histone-networks}) is to identify co-modification networks (which use histone locations as a substrate), and to analyze the correlation between eigengenes and eigenmarks to identify potentially related histone-gene module relationships. Both of these approaches rely on biological replicates to measure gene-gene or mark-mark correlations; and many replicates may be needed to robustly estimate these correlations.
+
+[better motivation needed in subsequent paragraph]
+
+The availability of multiple histone marks, as well as the fact that many histone modifications may be present in the UTR or enhancer region of a gene, suggests an alternative approach to gene clustering. By building histone modification related feature sets, genes can be clustered according to epigenetic similarity with far fewer replicates $-$ potentially as few as one. The revealed epigenetics-based gene networks may recapitulate known coexpression networks, but more likey these reveal additional structure underlying known regulatory networks.
+
+\section*{Methods}
+
+Using Chrom-HMM\cite{chrom-hmm} and Chrom-Impute\cite{chrom-impute} data on chromosome 21, we extract two sets of gene features for investigation. The first feature set (``tiled'') we tile the upstream and downstream 200kb for each gene into windows of size 2kb, and average the per-basepair peak probability within each window. This produces a total of $100 \times 2 \times 6 = 1200$ features per gene per cell. The second feature set (``promoter-enhancer'') focuses on the average (over a 1kb window) peak posterior probability for the gene promoter, and the two closest upstream and downstream enhancers. Note that these enhancers may be in \textit{any} cell type, and need not \textit{a priori} be associated with the given gene. This produces a more modest $5 \times 6 = 30$ features per gene per cell.
+
+Several gene-gene similarities are computed for exploratory analysis. First, the gene$\times$feature matrix is approximated by a matrix normal distribution, and a stepwise GLASSO approach\cite{yinliglasso} is used to estimate the gene-gene precision matrix while controlling for feature-feature correlations. Second, a kernel similarity (polynomial) is used to compute generalized correlations, with parameter selected so that the resulting matrix, if treated as an adjacency, is approximately scale-free\cite{wgcna}. Finally, Euclidean and Malahanobis distances are used to define both direct distance (for $k$-means), as well as dissimilarity scores for clustering.
+
+Because different patterns of gene regulation may appear at different scales, these similarities are calculated at three hierarchical levels. First, at the within-cell level, genes are clustered within specific cell types. At the tissue level, cell-specific gene features are concatenated within tissue type, and genes are clustered using the resulting extended features. Finaly at the global level, the gene features are concatenated across all cell types, and the genes are globally clustered.
+
+Lastly, the data is visualized via PCA and t-SNE\cite{tsne}. For clustering the data, we consider $k$-means\cite{kmeans} clustering based on our distance metrics, while using hierarchical clustering (with cuts based on WGCNA [note: dig out what this actually is...]) and affinity propagation\cite{affinity} for defining clusters on similarity-metrics.
+
+\section*{Results}
+
+
+\section*{Discussion}
+
+
+\begin{thebibliography}{8}
+
+\bibitem{mason09} Mason MJ, Fan G, Plath K, Zhou Q, Horvath S. 
+Signed weighted gene co-expression network analysis of transcriptional regulation in murine embryonic stem cells
+BMC Genomics
+2009
+
+\bibitem{xue14} Xue J,  Schultze JL, \textit{et al.}
+Transcriptome-Based Network Analysis Reveals a Spectrum Model of Human Macrophage Activation
+Immunity
+2014
+
+\bibitem{davidson11} Davidson EH.
+Evolutionary bioscience as regulatory systems biology
+Dev Biol.
+2011
+
+\bibitem{parikshak13} Parikshak NN, Horvath S, Geschwind DH, \textit{et al.}
+Integrative functional genomic analyses implicate specific molecular pathways and circuits in autism
+Cell
+2013
+
+\bibitem{willsey13} Willsey AJ, Noonan JP, \textit{et al.}
+Coexpression Networks Implicate Human Midfetal Deep Cortical Projection Neurons in the Pathogenesis of Autism
+Cell
+2013
+
+\bibitem{gulsuner13} Gulsuner S, Shahin H, \textit{et al.}
+Spatial and Temporal Mapping of De Novo Mutations in Schizophrenia to a Fetal Prefrontal Cortical Network
+Cell
+2013
+\end{thebibliography}
+
+
+\end{document}
